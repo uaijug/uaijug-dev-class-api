@@ -5,10 +5,13 @@ import br.com.uaijug.uaijugdev1api.exceptions.ResourceAlreadyExistsException;
 import br.com.uaijug.uaijugdev1api.model.domain.Developer;
 import br.com.uaijug.uaijugdev1api.model.services.DeveloperService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.hateoas.Link;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import javax.validation.Valid;
 import java.net.URI;
@@ -26,6 +29,13 @@ public class DeveloperResources {
     public ResponseEntity<List<Developer>> list() {
         List<Developer> developers = developerService.findAll(1, 10);
 
+        developers.forEach(director -> {
+            director.add(linkTo(methodOn(DeveloperResources.class).findById(director.getId())).withSelfRel());
+        });
+
+     //   Link allDirectorsLink = linkTo(methodOn(DeveloperResources.class).list()).withSelfRel();
+        //developers.add(linkTo(methodOn(DeveloperResources.class).list()).withSelfRel());
+
         if (developers.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -42,6 +52,7 @@ public class DeveloperResources {
             return ResponseEntity.noContent().build();
         }
 
+        developer.add(linkTo(methodOn(DeveloperResources.class).findById(developer.getId())).withSelfRel());
         return ResponseEntity.ok(developer);
     }
 

@@ -3,6 +3,7 @@ package br.com.uaijug.uaijugdev1api.model.domain;
 import lombok.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.hateoas.RepresentationModel;
 import org.springframework.validation.annotation.Validated;
 
 import javax.persistence.*;
@@ -22,7 +23,8 @@ import java.io.Serializable;
 @Table(name = "tb_developer")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Data
-public class Developer implements Serializable {
+public class Developer extends RepresentationModel<Developer> implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
