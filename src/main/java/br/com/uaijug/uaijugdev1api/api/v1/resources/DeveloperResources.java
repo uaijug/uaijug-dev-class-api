@@ -1,9 +1,13 @@
 package br.com.uaijug.uaijugdev1api.api.v1.resources;
 
+import br.com.uaijug.uaijugdev1api.api.v1.resources.dto.mapper.DeveloperMapper;
+import br.com.uaijug.uaijugdev1api.api.v1.resources.dto.request.DeveloperRequest;
+import br.com.uaijug.uaijugdev1api.api.v1.resources.dto.response.DeveloperResponse;
 import br.com.uaijug.uaijugdev1api.exceptions.BadResourceException;
 import br.com.uaijug.uaijugdev1api.exceptions.ResourceAlreadyExistsException;
 import br.com.uaijug.uaijugdev1api.model.domain.Developer;
 import br.com.uaijug.uaijugdev1api.model.services.DeveloperService;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +28,16 @@ public class DeveloperResources {
     @Autowired
     private DeveloperService developerService;
 
+    @Autowired
+    private DeveloperMapper developerMapper;
+
     @GetMapping
     @ResponseBody
     public ResponseEntity<List<Developer>> list() {
         List<Developer> developers = developerService.findAll(1, 10);
+        List<DeveloperResponse> developersResponse = developerMapper.map(developers);
 
-        developers.forEach(director -> {
+        developersResponse.forEach(director -> {
             director.add(linkTo(methodOn(DeveloperResources.class).findById(director.getId())).withSelfRel());
         });
 
@@ -45,15 +53,16 @@ public class DeveloperResources {
 
     @GetMapping("/{id}")
     @ResponseBody
-    public ResponseEntity<Developer> findById(@PathVariable("id") Long id) {
-        Developer developer = developerService.findById(id);
+    public ResponseEntity<DeveloperResponse> findById(@PathVariable("id") Long id) {
+        Developer developerFound = developerService.findById(id);
+        DeveloperResponse developerResponse = developerMapper.to(developerFound);
 
-        if (developer == null) {
+        if (developerResponse == null) {
             return ResponseEntity.noContent().build();
         }
 
-        developer.add(linkTo(methodOn(DeveloperResources.class).findById(developer.getId())).withSelfRel());
-        return ResponseEntity.ok(developer);
+        developerResponse.add(linkTo(methodOn(DeveloperResources.class).findById(developerResponse.getId())).withSelfRel());
+        return ResponseEntity.ok(developerResponse);
     }
 
     @DeleteMapping("/{id}")
@@ -64,39 +73,44 @@ public class DeveloperResources {
 
     @PostMapping
     @ResponseBody
-    public ResponseEntity<Developer> save(@Valid @RequestBody Developer developer) throws BadResourceException, ResourceAlreadyExistsException {
+    public ResponseEntity<DeveloperResponse> save(@Valid @RequestBody DeveloperRequest developerRequest) throws BadResourceException, ResourceAlreadyExistsException {
+        Developer developer = developerMapper.from(developerRequest);
         Developer developerSaved = developerService.save(developer);
+        DeveloperResponse developerResponse = developerMapper.to(developerSaved);
 
-        if (developer == null) {
+        if (developerResponse == null) {
             return ResponseEntity.noContent().build();
         }
 
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(developerSaved.getId()).toUri();
-        return ResponseEntity.created(uri).body(developerSaved);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(developerResponse.getId()).toUri();
+        return ResponseEntity.created(uri).body(developerResponse);
     }
 
     @PutMapping("/{id}")
     @ResponseBody
-    public ResponseEntity<Developer> update(@PathVariable("id") Long id, @Valid @RequestBody Developer developer) throws BadResourceException, ResourceAlreadyExistsException {
+    public ResponseEntity<DeveloperResponse> update(@PathVariable("id") Long id, @Valid @RequestBody DeveloperRequest developerRequest) throws BadResourceException, ResourceAlreadyExistsException {
+        Developer developer = developerMapper.from(developerRequest);
         Developer developerSaved = developerService.update(id, developer);
+        DeveloperResponse developerResponse = developerMapper.to(developerSaved);
 
-        if (developer == null) {
+        if (developerResponse == null) {
             return ResponseEntity.noContent().build();
         }
 
-        return ResponseEntity.ok(developer);
+        return ResponseEntity.ok(developerResponse);
     }
 
     @GetMapping("/by")
     @ResponseBody
-    public ResponseEntity<Developer> by(@RequestParam String nome) {
-        Developer developer = developerService.findByNome(nome);
+    public ResponseEntity<DeveloperResponse> by(@RequestParam String nome) {
+        Developer developerFound = developerService.findByNome(nome);
+        DeveloperResponse developerResponse = developerMapper.to(developerFound);
 
-        if (developer == null) {
+        if (developerResponse == null) {
             return ResponseEntity.noContent().build();
         }
 
-        return ResponseEntity.ok(developer);
+        return ResponseEntity.ok(developerResponse);
     }
 
 }
